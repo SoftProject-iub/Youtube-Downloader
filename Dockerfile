@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     python3 \
     python3-pip \
+    python-is-python3 \
     curl \
     wget \
     ca-certificates \
@@ -41,7 +42,7 @@ COPY . .
 # Chromium path
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Prevent Chromium crashes
+# Prevent memory crashes
 ENV NODE_OPTIONS=--max-old-space-size=512
 
 CMD ["npm", "start"]
