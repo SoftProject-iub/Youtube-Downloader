@@ -1,4 +1,4 @@
-import pkg from "whatsapp-web.js";
+=import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import yts from "yt-search";
 import ytDlp from "yt-dlp-exec";
@@ -454,6 +454,44 @@ download pasoori video
         }
     }
 );
+
+/* ─────────────────────────────────────────────
+   CLEAR CHROMIUM LOCK FILES
+───────────────────────────────────────────── */
+
+const lockFiles = [
+    path.join(CONFIG.sessionPath, "SingletonLock"),
+    path.join(CONFIG.sessionPath, "SingletonCookie"),
+    path.join(CONFIG.sessionPath, "SingletonSocket"),
+    path.join(
+        CONFIG.sessionPath,
+        `Default-${CONFIG.clientId}`,
+        "SingletonLock"
+    ),
+    path.join(
+        CONFIG.sessionPath,
+        `Default-${CONFIG.clientId}`,
+        "SingletonCookie"
+    ),
+    path.join(
+        CONFIG.sessionPath,
+        `Default-${CONFIG.clientId}`,
+        "SingletonSocket"
+    )
+];
+
+for (const lockFile of lockFiles) {
+
+    try {
+
+        await fs.remove(lockFile);
+
+        console.log(
+            `REMOVED LOCK: ${lockFile}`
+        );
+
+    } catch {}
+}
 
 /* ─────────────────────────────────────────────
    START BOT
