@@ -1,9 +1,9 @@
-=import pkg from "whatsapp-web.js";
-import qrcode from "qrcode-terminal";
+import pkg from "whatsapp-web.js";
 import yts from "yt-search";
 import ytDlp from "yt-dlp-exec";
 import fs from "fs-extra";
 import path from "path";
+import { execSync } from "child_process";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -23,10 +23,79 @@ const CONFIG = {
 };
 
 /* ─────────────────────────────────────────────
-   CREATE TMP FOLDER
+   CREATE FOLDERS
 ───────────────────────────────────────────── */
 
 await fs.ensureDir(CONFIG.tempPath);
+await fs.ensureDir(CONFIG.sessionPath);
+
+/* ─────────────────────────────────────────────
+   KILL ANY LEFTOVER CHROMIUM PROCESSES
+───────────────────────────────────────────── */
+
+try {
+
+    execSync("pkill -f chromium || true");
+    execSync("pkill -f chrome || true");
+
+    console.log("KILLED OLD CHROMIUM PROCESSES");
+
+} catch {}
+
+/* ─────────────────────────────────────────────
+   REMOVE ALL CHROMIUM LOCK FILES RECURSIVELY
+───────────────────────────────────────────── */
+
+const lockNames = [
+    "SingletonLock",
+    "SingletonCookie",
+    "SingletonSocket"
+];
+
+async function removeLocks(dir) {
+
+    try {
+
+        const entries =
+            await fs.readdir(dir, {
+                withFileTypes: true
+            });
+
+        for (const entry of entries) {
+
+            const fullPath =
+                path.join(
+                    dir,
+                    entry.name
+                );
+
+            if (
+                entry.isFile() &&
+                lockNames.includes(
+                    entry.name
+                )
+            ) {
+
+                await fs.remove(fullPath);
+
+                console.log(
+                    `REMOVED LOCK: ${fullPath}`
+                );
+
+            } else if (
+                entry.isDirectory()
+            ) {
+
+                await removeLocks(
+                    fullPath
+                );
+            }
+        }
+
+    } catch {}
+}
+
+await removeLocks(CONFIG.sessionPath);
 
 /* ─────────────────────────────────────────────
    WHATSAPP CLIENT
@@ -454,44 +523,6 @@ download pasoori video
         }
     }
 );
-
-/* ─────────────────────────────────────────────
-   CLEAR CHROMIUM LOCK FILES
-───────────────────────────────────────────── */
-
-const lockFiles = [
-    path.join(CONFIG.sessionPath, "SingletonLock"),
-    path.join(CONFIG.sessionPath, "SingletonCookie"),
-    path.join(CONFIG.sessionPath, "SingletonSocket"),
-    path.join(
-        CONFIG.sessionPath,
-        `Default-${CONFIG.clientId}`,
-        "SingletonLock"
-    ),
-    path.join(
-        CONFIG.sessionPath,
-        `Default-${CONFIG.clientId}`,
-        "SingletonCookie"
-    ),
-    path.join(
-        CONFIG.sessionPath,
-        `Default-${CONFIG.clientId}`,
-        "SingletonSocket"
-    )
-];
-
-for (const lockFile of lockFiles) {
-
-    try {
-
-        await fs.remove(lockFile);
-
-        console.log(
-            `REMOVED LOCK: ${lockFile}`
-        );
-
-    } catch {}
-}
 
 /* ─────────────────────────────────────────────
    START BOT
