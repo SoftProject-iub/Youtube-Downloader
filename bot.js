@@ -5,10 +5,29 @@ import fs from "fs-extra";
 import path from "path";
 import { execSync } from "child_process";
 import dotenv from "dotenv";
+import express from "express";
 
 dotenv.config();
 
 const { Client, LocalAuth, MessageMedia } = pkg;
+
+/* ─────────────────────────────────────────────
+   EXPRESS SERVER FOR RAILWAY
+───────────────────────────────────────────── */
+
+const app = express();
+
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+
+    res.send("SHEEZZI BOT RUNNING");
+});
+
+app.listen(PORT, () => {
+
+    console.log(`SERVER RUNNING ON ${PORT}`);
+});
 
 /* ─────────────────────────────────────────────
    CONFIG
@@ -30,7 +49,7 @@ await fs.ensureDir(CONFIG.tempPath);
 await fs.ensureDir(CONFIG.sessionPath);
 
 /* ─────────────────────────────────────────────
-   KILL ANY LEFTOVER CHROMIUM PROCESSES
+   KILL OLD CHROMIUM PROCESSES
 ───────────────────────────────────────────── */
 
 try {
@@ -38,12 +57,14 @@ try {
     execSync("pkill -f chromium || true");
     execSync("pkill -f chrome || true");
 
-    console.log("KILLED OLD CHROMIUM PROCESSES");
+    console.log(
+        "KILLED OLD CHROMIUM PROCESSES"
+    );
 
 } catch {}
 
 /* ─────────────────────────────────────────────
-   REMOVE ALL CHROMIUM LOCK FILES RECURSIVELY
+   REMOVE LOCK FILES
 ───────────────────────────────────────────── */
 
 const lockNames = [
@@ -98,13 +119,35 @@ async function removeLocks(dir) {
 await removeLocks(CONFIG.sessionPath);
 
 /* ─────────────────────────────────────────────
-   HELPER: SLEEP
+   HELPER
 ───────────────────────────────────────────── */
 
 const sleep = ms =>
     new Promise(resolve =>
         setTimeout(resolve, ms)
     );
+
+function progressBar(percent) {
+
+    const filled =
+        Math.floor(percent / 10);
+
+    return (
+        "[" +
+        "=".repeat(filled) +
+        " ".repeat(10 - filled) +
+        `] ${percent}%`
+    );
+}
+
+function cleanQuery(text) {
+
+    return text
+        .replace("download", "")
+        .replace("audio", "")
+        .replace("video", "")
+        .trim();
+}
 
 /* ─────────────────────────────────────────────
    WHATSAPP CLIENT
@@ -140,133 +183,47 @@ const client = new Client({
    EVENTS
 ───────────────────────────────────────────── */
 
-let pairingRequested = false;
+client.on(
+    "authenticated",
+    () => {
 
-client.on("qr", async () => {
-
-    if (pairingRequested) return;
-
-    pairingRequested = true;
-
-    console.log(
-        "QR received — waiting for page to load..."
-    );
-
-    /* WAIT FOR WHATSAPP PAGE TO FULLY LOAD */
-
-    await sleep(5000);
-
-    let retries = 3;
-
-    while (retries > 0) {
-
-        try {
-
-            console.log(
-                `Requesting pairing code (attempt ${4 - retries}/3)...`
-            );
-
-            const pairingCode =
-                await client.requestPairingCode(
-                    CONFIG.phoneNumber
-                );
-
-            console.log(
-                "\nPAIRING CODE:\n"
-            );
-
-            console.log(pairingCode);
-
-            console.log(
-                "\nWhatsApp > Linked Devices > Link with phone number\n"
-            );
-
-            break;
-
-        } catch (err) {
-
-            retries--;
-
-            console.log(
-                `PAIRING CODE ERROR (${3 - retries}/3):`,
-                err.message || err
-            );
-
-            if (retries > 0) {
-
-                console.log(
-                    "Retrying in 5 seconds..."
-                );
-
-                await sleep(5000);
-
-            } else {
-
-                console.log(
-                    "All retries failed. Restart the bot."
-                );
-            }
-        }
+        console.log(
+            "AUTHENTICATED"
+        );
     }
-});
+);
 
-client.on("code", code => {
+client.on(
+    "ready",
+    () => {
 
-    console.log("\nPAIRING CODE:\n");
+        console.log(
+            "BOT IS READY"
+        );
+    }
+);
 
-    console.log(code);
+client.on(
+    "auth_failure",
+    msg => {
 
-    console.log(
-        "\nWhatsApp > Linked Devices > Link with phone number\n"
-    );
-});
+        console.log(
+            "AUTH FAILED:",
+            msg
+        );
+    }
+);
 
-client.on("authenticated", () => {
+client.on(
+    "disconnected",
+    reason => {
 
-    console.log("AUTHENTICATED");
-});
-
-client.on("ready", () => {
-
-    console.log("BOT IS READY");
-});
-
-client.on("auth_failure", msg => {
-
-    console.log("AUTH FAILED:", msg);
-});
-
-client.on("disconnected", reason => {
-
-    console.log("DISCONNECTED:", reason);
-
-    pairingRequested = false;
-});
-
-/* ─────────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────────── */
-
-function progressBar(percent) {
-
-    const filled = Math.floor(percent / 10);
-
-    return (
-        "[" +
-        "=".repeat(filled) +
-        " ".repeat(10 - filled) +
-        `] ${percent}%`
-    );
-}
-
-function cleanQuery(text) {
-
-    return text
-        .replace("download", "")
-        .replace("audio", "")
-        .replace("video", "")
-        .trim();
-}
+        console.log(
+            "DISCONNECTED:",
+            reason
+        );
+    }
+);
 
 /* ─────────────────────────────────────────────
    DOWNLOAD FUNCTION
@@ -284,20 +241,24 @@ async function downloadMedia(
             `🔍 Searching "${query}"...`
         );
 
-        const search = await yts(query);
+        const search =
+            await yts(query);
 
-        if (!search.videos.length) {
+        if (
+            !search.videos.length
+        ) {
 
             return message.reply(
                 "❌ No results found"
             );
         }
 
-        const video = search.videos[0];
+        const video =
+            search.videos[0];
 
-        /* LIMIT LARGE VIDEOS */
-
-        if (video.seconds > 1800) {
+        if (
+            video.seconds > 1800
+        ) {
 
             return message.reply(
                 "❌ Video too long"
@@ -319,39 +280,43 @@ ${video.title}
                 ? "mp3"
                 : "mp4";
 
-        const filePath = path.join(
-            CONFIG.tempPath,
-            `${Date.now()}.${extension}`
-        );
+        const filePath =
+            path.join(
+                CONFIG.tempPath,
+                `${Date.now()}.${extension}`
+            );
 
-        /* YT-DLP */
+        /* YT-DLP OPTIONS */
 
-         const options = {
+        const options = {
 
-    output: filePath,
+            output: filePath,
 
-    format:
-        type === "audio"
-            ? "bestaudio"
-            : "bestvideo+bestaudio",
+            format:
+                type === "audio"
+                    ? "bestaudio"
+                    : "bestvideo+bestaudio",
 
-    ffmpegLocation:
-        CONFIG.ffmpegPath
-};
+            ffmpegLocation:
+                CONFIG.ffmpegPath
+        };
 
-/* AUDIO ONLY SETTINGS */
+        /* AUDIO SETTINGS */
 
-if (type === "audio") {
+        if (
+            type === "audio"
+        ) {
 
-    options.extractAudio = true;
+            options.extractAudio = true;
 
-    options.audioFormat = "mp3";
-}
+            options.audioFormat = "mp3";
+        }
 
-const process = ytDlp.exec(
-    video.url,
-    options
-);
+        const process =
+            ytDlp.exec(
+                video.url,
+                options
+            );
 
         /* PROGRESS */
 
@@ -376,7 +341,9 @@ const process = ytDlp.exec(
                     if (!match) return;
 
                     const percent =
-                        parseInt(match[1]);
+                        parseInt(
+                            match[1]
+                        );
 
                     if (
                         percent >= 25 &&
@@ -420,10 +387,10 @@ const process = ytDlp.exec(
 
         await process;
 
-        /* CHECK FILE */
-
         const exists =
-            await fs.pathExists(filePath);
+            await fs.pathExists(
+                filePath
+            );
 
         if (!exists) {
 
@@ -435,8 +402,6 @@ const process = ytDlp.exec(
         await message.reply(
             "✅ Download completed"
         );
-
-        /* SEND MEDIA */
 
         const media =
             MessageMedia.fromFilePath(
@@ -450,8 +415,6 @@ const process = ytDlp.exec(
                 sendAudioAsVoice: false
             }
         );
-
-        /* DELETE FILE */
 
         await fs.remove(filePath);
 
@@ -587,4 +550,49 @@ console.log(
     "STARTING SHEEZZI BOT..."
 );
 
-await client.initialize();
+client.initialize();
+
+/* ─────────────────────────────────────────────
+   REQUEST PAIRING CODE
+───────────────────────────────────────────── */
+
+setTimeout(async () => {
+
+    try {
+
+        console.log(
+            "\nREQUESTING PAIRING CODE...\n"
+        );
+
+        const code =
+            await client.requestPairingCode(
+                CONFIG.phoneNumber
+            );
+
+        console.log(
+            "\n━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.log(
+            "PAIRING CODE:\n"
+        );
+
+        console.log(code);
+
+        console.log(
+            "\n━━━━━━━━━━━━━━━━━━━━━━"
+        );
+
+        console.log(
+            "\nWhatsApp > Linked Devices > Link with phone number\n"
+        );
+
+    } catch (err) {
+
+        console.log(
+            "PAIRING CODE ERROR:",
+            err
+        );
+    }
+
+}, 30000);
