@@ -201,18 +201,24 @@ ${video.title}
             type === "audio"
                 ? {
                       output: filePath,
-                      format: "bestaudio",
+                      format: "bestaudio/best",
                       extractAudio: true,
                       audioFormat: "mp3",
                       ffmpegLocation: CONFIG.ffmpegPath,
-                      extractorArgs: "youtube:player_client=android"
+                      extractorArgs: "youtube:player_client=tv,web",
+                      addHeader: [
+                          "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/6.0 TV Safari/538.1"
+                      ]
                   }
                 : {
                       output: filePath,
                       format: "bestvideo+bestaudio/best",
                       mergeOutputFormat: "mp4",
                       ffmpegLocation: CONFIG.ffmpegPath,
-                      extractorArgs: "youtube:player_client=android"
+                      extractorArgs: "youtube:player_client=tv,web",
+                      addHeader: [
+                          "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/6.0 TV Safari/538.1"
+                      ]
                   };
 
         const process = ytDlp.exec(video.url, ytDlpOptions);
