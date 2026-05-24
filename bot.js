@@ -58,65 +58,12 @@ const client = new Client({
 });
 
 /* ─────────────────────────────────────────────
-   PAIRING CODE FLAG
-───────────────────────────────────────────── */
-
-let pairingRequested = false;
-
-/* ─────────────────────────────────────────────
    EVENTS
 ───────────────────────────────────────────── */
 
-client.on("qr", async () => {
+client.on("qr", () => {
 
-    if (pairingRequested) return;
-
-    pairingRequested = true;
-
-    /* Retry requesting pairing code until it works */
-
-    for (let attempt = 1; attempt <= 5; attempt++) {
-
-        await new Promise(resolve =>
-            setTimeout(resolve, attempt * 3000)
-        );
-
-        try {
-
-            const pairingCode =
-                await client.requestPairingCode(
-                    CONFIG.phoneNumber
-                );
-
-            console.log(
-                "\nWhatsApp > Linked Devices > Link with phone number\n"
-            );
-
-            console.log("PAIRING CODE:\n");
-
-            console.log(pairingCode);
-
-            console.log(
-                "\nWhatsApp > Linked Devices > Link with phone number\n"
-            );
-
-            break;
-
-        } catch (err) {
-
-            console.log(
-                "PAIRING ATTEMPT " + attempt + " FAILED:",
-                err.message || err
-            );
-
-            if (attempt === 5) {
-
-                console.log(
-                    "ALL PAIRING ATTEMPTS FAILED"
-                );
-            }
-        }
-    }
+    /* QR suppressed — pairing code requested after initialize */
 });
 
 client.on("code", code => {
@@ -489,4 +436,50 @@ console.log(
     "STARTING SHEEZZI BOT..."
 );
 
+/* Request pairing code BEFORE initialize so WhatsApp
+   uses phone-link flow instead of QR */
+
+client.pupPage?.once("load", async () => {
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    try {
+
+        await client.requestPairingCode(CONFIG.phoneNumber);
+
+    } catch {}
+});
+
 await client.initialize();
+
+/* Fallback: request after initialize if code event not fired */
+
+await new Promise(r => setTimeout(r, 8000));
+
+try {
+
+    const state = await client.getState().catch(() => null);
+
+    if (state !== "CONNECTED") {
+
+        const code = await client.requestPairingCode(
+            CONFIG.phoneNumber
+        );
+
+        console.log(
+            "\nWhatsApp > Linked Devices > Link with phone number\n"
+        );
+
+        console.log("PAIRING CODE:\n");
+
+        console.log(code);
+
+        console.log(
+            "\nWhatsApp > Linked Devices > Link with phone number\n"
+        );
+    }
+
+} catch (err) {
+
+    console.log("PAIRING ERROR:", err.message || err);
+}
