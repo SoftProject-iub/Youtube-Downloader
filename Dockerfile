@@ -1,6 +1,6 @@
-FROM node:20-bullseye
+FROM node:20-bookworm
 
-# Install Chromium + ffmpeg + dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     chromium \
     ffmpeg \
@@ -28,8 +28,8 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp
-RUN pip3 install yt-dlp
+# Install latest yt-dlp
+RUN pip3 install -U yt-dlp
 
 WORKDIR /app
 
@@ -42,7 +42,7 @@ COPY . .
 # Chromium path
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Prevent memory crashes
+# Memory fix
 ENV NODE_OPTIONS=--max-old-space-size=512
 
 CMD ["npm", "start"]
