@@ -230,14 +230,16 @@ Downloading ${type}...`
               extractAudio: true,
               audioFormat: "mp3",
               ffmpegLocation: CONFIG.ffmpegPath,
-              cookies: "./cookies.txt"
+              cookies: "./cookies.txt",
+              extractorArgs: "youtube:player_client=android"
           }
         : {
               output: filePath,
               format: "bestvideo+bestaudio",
               mergeOutputFormat: "mp4",
               ffmpegLocation: CONFIG.ffmpegPath,
-              cookies: "./cookies.txt"
+              cookies: "./cookies.txt",
+              extractorArgs: "youtube:player_client=android"
           };
 
         const process = ytDlp.exec(
