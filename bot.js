@@ -76,7 +76,7 @@ client.on("qr", async () => {
     /* Wait for WhatsApp web page to fully load */
 
     await new Promise(resolve =>
-        setTimeout(resolve, 3000)
+        setTimeout(resolve, 7000)
     );
 
     try {
