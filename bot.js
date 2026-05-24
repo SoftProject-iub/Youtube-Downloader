@@ -197,6 +197,10 @@ ${video.title}
 
         /* YT-DLP */
 
+        const cookiesPath = "./cookies.txt";
+
+        const hasCookies = await fs.pathExists(cookiesPath);
+
         const ytDlpOptions =
             type === "audio"
                 ? {
@@ -206,9 +210,7 @@ ${video.title}
                       audioFormat: "mp3",
                       ffmpegLocation: CONFIG.ffmpegPath,
                       extractorArgs: "youtube:player_client=tv,web",
-                      addHeader: [
-                          "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/6.0 TV Safari/538.1"
-                      ]
+                      ...(hasCookies && { cookies: cookiesPath })
                   }
                 : {
                       output: filePath,
@@ -216,9 +218,7 @@ ${video.title}
                       mergeOutputFormat: "mp4",
                       ffmpegLocation: CONFIG.ffmpegPath,
                       extractorArgs: "youtube:player_client=tv,web",
-                      addHeader: [
-                          "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/6.0 TV Safari/538.1"
-                      ]
+                      ...(hasCookies && { cookies: cookiesPath })
                   };
 
         const process = ytDlp.exec(video.url, ytDlpOptions);
