@@ -14,7 +14,7 @@ const { Client, LocalAuth, MessageMedia } = pkg;
 ───────────────────────────────────────────── */
 
 const CONFIG = {
-    phoneNumber: "923376201542",
+    phoneNumber: "923376102787",
     clientId: "sheezzi-bot",
     sessionPath: "./session",
     tempPath: "./tmp",
@@ -177,7 +177,7 @@ async function downloadMedia(
     try {
 
         await message.reply(
-            `🔍 Searching "${query}"...`
+            `Searching "${query}"...`
         );
 
         const search = await yts(query);
@@ -185,7 +185,7 @@ async function downloadMedia(
         if (!search.videos.length) {
 
             return message.reply(
-                "❌ No results found"
+                "No results found"
             );
         }
 
@@ -193,21 +193,21 @@ async function downloadMedia(
 
         /* LIMIT LARGE VIDEOS */
 
-        if (video.seconds > 1800) {
+        if (video.seconds > 5000) {
 
             return message.reply(
-                "❌ Video too long"
+                "Video too long"
             );
         }
 
         await message.reply(
-`🎵 FOUND:
+`FOUND:
 
 ${video.title}
 
-⏱ Duration: ${video.timestamp}
+Duration: ${video.timestamp}
 
-⬇ Downloading ${type}...`
+Downloading ${type}...`
         );
 
         const extension =
@@ -323,7 +323,7 @@ ${video.title}
         }
 
         await message.reply(
-            "✅ Download completed"
+            "*Download completed*"
         );
 
         /* SEND MEDIA */
@@ -357,7 +357,7 @@ ${video.title}
         );
 
         await message.reply(
-            "❌ Download failed"
+            "*Download failed*"
         );
     }
 }
@@ -391,24 +391,20 @@ client.on(
             ) {
 
                 return message.reply(
-`🎵 *SHEEZZI BOT*
+`*Music Downloader*
+Download Any Music
+━━━━━━━━━━━━━━━
+COMMANDS:
 
+Download sajna audio
 ━━━━━━━━━━━━━━━
 
-📥 COMMANDS:
+~FAST DOWNLOAD
+~YOUTUBE SEARCH
+~DOWNLOAD ANY SONG
 
-download pasoori audio
-
-download pasoori video
-
-━━━━━━━━━━━━━━━
-
-✅ HD QUALITY
-✅ FAST DOWNLOAD
-✅ YOUTUBE SEARCH
-✅ AUDIO + VIDEO
-✅ PAIRING LOGIN
-✅ RAILWAY READY`
+Developed by sheezzi
+━━━━━━━━━━━━━━━`
                 );
             }
 
@@ -436,7 +432,7 @@ download pasoori video
                 ) {
 
                     return message.reply(
-                        "❌ Specify audio or video"
+                        "Specify audio or video"
                     );
                 }
 
@@ -446,7 +442,7 @@ download pasoori video
                 if (!query) {
 
                     return message.reply(
-                        "❌ Song name missing"
+                        "Song name missing"
                     );
                 }
 
