@@ -73,37 +73,49 @@ client.on("qr", async () => {
 
     pairingRequested = true;
 
-    /* Wait for WhatsApp web page to fully load */
+    /* Retry requesting pairing code until it works */
 
-    await new Promise(resolve =>
-        setTimeout(resolve, 7000)
-    );
+    for (let attempt = 1; attempt <= 5; attempt++) {
 
-    try {
+        await new Promise(resolve =>
+            setTimeout(resolve, attempt * 3000)
+        );
 
-        const pairingCode =
-            await client.requestPairingCode(
-                CONFIG.phoneNumber
+        try {
+
+            const pairingCode =
+                await client.requestPairingCode(
+                    CONFIG.phoneNumber
+                );
+
+            console.log(
+                "\nWhatsApp > Linked Devices > Link with phone number\n"
             );
 
-        console.log(
-            "\nWhatsApp > Linked Devices > Link with phone number\n"
-        );
+            console.log("PAIRING CODE:\n");
 
-        console.log("PAIRING CODE:\n");
+            console.log(pairingCode);
 
-        console.log(pairingCode);
+            console.log(
+                "\nWhatsApp > Linked Devices > Link with phone number\n"
+            );
 
-        console.log(
-            "\nWhatsApp > Linked Devices > Link with phone number\n"
-        );
+            break;
 
-    } catch (err) {
+        } catch (err) {
 
-        console.log(
-            "PAIRING ERROR:",
-            err.message || err
-        );
+            console.log(
+                "PAIRING ATTEMPT " + attempt + " FAILED:",
+                err.message || err
+            );
+
+            if (attempt === 5) {
+
+                console.log(
+                    "ALL PAIRING ATTEMPTS FAILED"
+                );
+            }
+        }
     }
 });
 
