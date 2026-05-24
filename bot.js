@@ -1,5 +1,4 @@
 import pkg from "whatsapp-web.js";
-import qrcode from "qrcode-terminal";
 import yts from "yt-search";
 import ytDlp from "yt-dlp-exec";
 import fs from "fs-extra";
@@ -59,12 +58,26 @@ const client = new Client({
 });
 
 /* ─────────────────────────────────────────────
+   PAIRING CODE FLAG
+───────────────────────────────────────────── */
+
+let pairingRequested = false;
+
+/* ─────────────────────────────────────────────
    EVENTS
 ───────────────────────────────────────────── */
 
 client.on("qr", async () => {
 
-    /* QR fires first — intercept and request pairing code instead */
+    if (pairingRequested) return;
+
+    pairingRequested = true;
+
+    /* Wait for WhatsApp web page to fully load */
+
+    await new Promise(resolve =>
+        setTimeout(resolve, 3000)
+    );
 
     try {
 
@@ -89,7 +102,7 @@ client.on("qr", async () => {
 
         console.log(
             "PAIRING ERROR:",
-            err
+            err.message || err
         );
     }
 });
@@ -378,7 +391,8 @@ client.on(
             ) {
 
                 return message.reply(
-`🎵 *SHEEZZI BOT*
+`*Youtube Downloader*
+*Developed by sheezzi*
 
 ━━━━━━━━━━━━━━━
 
@@ -390,12 +404,11 @@ download pasoori video
 
 ━━━━━━━━━━━━━━━
 
-✅ HD QUALITY
-✅ FAST DOWNLOAD
-✅ YOUTUBE SEARCH
-✅ AUDIO + VIDEO
-✅ PAIRING LOGIN
-✅ RAILWAY READY`
+ HD QUALITY
+ FAST DOWNLOAD
+ YOUTUBE SEARCH
+ AUDIO + VIDEO
+
                 );
             }
 
