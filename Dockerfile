@@ -28,11 +28,11 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Force Python 3.11 as default
+# Force Python 3.11
 RUN ln -sf /usr/bin/python3.11 /usr/bin/python
 
 # Install latest yt-dlp
-RUN pip3 install --upgrade yt-dlp
+RUN pip3 install --break-system-packages --upgrade yt-dlp
 
 WORKDIR /app
 
