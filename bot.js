@@ -14,7 +14,7 @@ const { Client, LocalAuth, MessageMedia } = pkg;
 ───────────────────────────────────────────── */
 
 const CONFIG = {
-    phoneNumber: "923288616670",
+    phoneNumber: "923376201542",
     clientId: "sheezzi-bot",
     sessionPath: "./session",
     tempPath: "./tmp",
@@ -205,14 +205,14 @@ ${video.title}
                       extractAudio: true,
                       audioFormat: "mp3",
                       ffmpegLocation: CONFIG.ffmpegPath,
-                      extractor_args: "youtube:player_client=android"
+                      extractorArgs: "youtube:player_client=android"
                   }
                 : {
                       output: filePath,
                       format: "bestvideo+bestaudio/best",
                       mergeOutputFormat: "mp4",
                       ffmpegLocation: CONFIG.ffmpegPath,
-                      extractor_args: "youtube:player_client=android"
+                      extractorArgs: "youtube:player_client=android"
                   };
 
         const process = ytDlp.exec(video.url, ytDlpOptions);
