@@ -223,20 +223,22 @@ Downloading ${type}...`
         /* YT-DLP */
 
         const ytDlpOptions =
-            type === "audio"
-                ? {
-                      output: filePath,
-                      format: "bestaudio",
-                      extractAudio: true,
-                      audioFormat: "mp3",
-                      ffmpegLocation: CONFIG.ffmpegPath
-                  }
-                : {
-                      output: filePath,
-                      format: "bestvideo+bestaudio",
-                      mergeOutputFormat: "mp4",
-                      ffmpegLocation: CONFIG.ffmpegPath
-                  };
+    type === "audio"
+        ? {
+              output: filePath,
+              format: "bestaudio",
+              extractAudio: true,
+              audioFormat: "mp3",
+              ffmpegLocation: CONFIG.ffmpegPath,
+              cookies: "./cookies.txt"
+          }
+        : {
+              output: filePath,
+              format: "bestvideo+bestaudio",
+              mergeOutputFormat: "mp4",
+              ffmpegLocation: CONFIG.ffmpegPath,
+              cookies: "./cookies.txt"
+          };
 
         const process = ytDlp.exec(
             video.url,
