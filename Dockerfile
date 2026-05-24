@@ -4,7 +4,7 @@ FROM node:20-bookworm
 RUN apt-get update && apt-get install -y \
     chromium \
     ffmpeg \
-    python3 \
+    python3.11 \
     python3-pip \
     python-is-python3 \
     curl \
@@ -28,8 +28,11 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
+# Force Python 3.11 as default
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python
+
 # Install latest yt-dlp
-RUN pip3 install -U yt-dlp
+RUN pip3 install --upgrade yt-dlp
 
 WORKDIR /app
 
@@ -39,10 +42,8 @@ RUN npm install
 
 COPY . .
 
-# Chromium path
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Memory fix
 ENV NODE_OPTIONS=--max-old-space-size=512
 
 CMD ["npm", "start"]
