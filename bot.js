@@ -96,9 +96,22 @@ client.on("auth_failure", msg => {
     console.log("AUTH FAILED:", msg);
 });
 
-client.on("disconnected", reason => {
+client.on("disconnected", async reason => {
 
     console.log("DISCONNECTED:", reason);
+
+    console.log("RECONNECTING IN 5 SECONDS...");
+
+    await new Promise(r => setTimeout(r, 5000));
+
+    try {
+
+        await client.initialize();
+
+    } catch (err) {
+
+        console.log("RECONNECT FAILED:", err.message || err);
+    }
 });
 
 /* ─────────────────────────────────────────────
@@ -292,32 +305,73 @@ ${video.title}
                 filePath
             );
 
-        await client.sendMessage(
-            message.from,
-            media,
-            {
-                sendAudioAsVoice: false
+        /* Retry send up to 3 times if browser drops */
+
+        let sent = false;
+
+        for (let attempt = 1; attempt <= 3; attempt++) {
+
+            try {
+
+                await client.sendMessage(
+                    message.from,
+                    media,
+                    {
+                        sendAudioAsVoice: false
+                    }
+                );
+
+                sent = true;
+
+                break;
+
+            } catch (sendErr) {
+
+                console.log(
+                    `SEND ATTEMPT ${attempt} FAILED:`,
+                    sendErr.message || sendErr
+                );
+
+                if (attempt < 3) {
+
+                    await new Promise(r =>
+                        setTimeout(r, 3000)
+                    );
+                }
             }
-        );
+        }
 
         /* DELETE FILE */
 
         await fs.remove(filePath);
 
-        console.log(
-            `SENT TO ${message.from}`
-        );
+        if (sent) {
+
+            console.log(
+                `SENT TO ${message.from}`
+            );
+
+        } else {
+
+            console.log(
+                `SEND FAILED TO ${message.from}`
+            );
+        }
 
     } catch (err) {
 
         console.log(
             "DOWNLOAD ERROR:",
-            err
+            err.message || err
         );
 
-        await message.reply(
-            "❌ Download failed"
-        );
+        try {
+
+            await message.reply(
+                "❌ Download failed — please try again"
+            );
+
+        } catch {}
     }
 }
 
