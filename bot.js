@@ -1,4 +1,5 @@
 import pkg from "whatsapp-web.js";
+import qrcode from "qrcode-terminal";
 import yts from "yt-search";
 import ytDlp from "yt-dlp-exec";
 import fs from "fs-extra";
@@ -14,7 +15,7 @@ const { Client, LocalAuth, MessageMedia } = pkg;
 ───────────────────────────────────────────── */
 
 const CONFIG = {
-    phoneNumber: "923376102787",
+    phoneNumber: "923376201542",
     clientId: "sheezzi-bot",
     sessionPath: "./session",
     tempPath: "./tmp",
@@ -61,18 +62,20 @@ const client = new Client({
    EVENTS
 ───────────────────────────────────────────── */
 
-client.on("qr", () => {
+client.on("qr", qr => {
 
-    /* QR suppressed — pairing code requested after initialize */
+    console.clear();
+
+    console.log("\nSCAN QR CODE BELOW:\n");
+
+    qrcode.generate(qr, {
+        small: true
+    });
 });
 
 client.on("code", code => {
 
-    console.log(
-        "\nWhatsApp > Linked Devices > Link with phone number\n"
-    );
-
-    console.log("PAIRING CODE:\n");
+    console.log("\nPAIRING CODE:\n");
 
     console.log(code);
 
@@ -96,22 +99,9 @@ client.on("auth_failure", msg => {
     console.log("AUTH FAILED:", msg);
 });
 
-client.on("disconnected", async reason => {
+client.on("disconnected", reason => {
 
     console.log("DISCONNECTED:", reason);
-
-    console.log("RECONNECTING IN 5 SECONDS...");
-
-    await new Promise(r => setTimeout(r, 5000));
-
-    try {
-
-        await client.initialize();
-
-    } catch (err) {
-
-        console.log("RECONNECT FAILED:", err.message || err);
-    }
 });
 
 /* ─────────────────────────────────────────────
@@ -197,28 +187,20 @@ ${video.title}
 
         /* YT-DLP */
 
-        const cookiesPath = "./cookies.txt";
-
-        const hasCookies = await fs.pathExists(cookiesPath);
-
         const ytDlpOptions =
             type === "audio"
                 ? {
                       output: filePath,
-                      format: "bestaudio/best",
+                      format: "bestaudio",
                       extractAudio: true,
                       audioFormat: "mp3",
-                      ffmpegLocation: CONFIG.ffmpegPath,
-                      extractorArgs: "youtube:player_client=mweb,tv",
-                      ...(hasCookies && { cookies: cookiesPath })
+                      ffmpegLocation: CONFIG.ffmpegPath
                   }
                 : {
                       output: filePath,
-                      format: "bestvideo+bestaudio/best",
+                      format: "bestvideo+bestaudio",
                       mergeOutputFormat: "mp4",
-                      ffmpegLocation: CONFIG.ffmpegPath,
-                      extractorArgs: "youtube:player_client=mweb,tv",
-                      ...(hasCookies && { cookies: cookiesPath })
+                      ffmpegLocation: CONFIG.ffmpegPath
                   };
 
         const process = ytDlp.exec(video.url, ytDlpOptions);
@@ -313,73 +295,32 @@ ${video.title}
                 filePath
             );
 
-        /* Retry send up to 3 times if browser drops */
-
-        let sent = false;
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-
-            try {
-
-                await client.sendMessage(
-                    message.from,
-                    media,
-                    {
-                        sendAudioAsVoice: false
-                    }
-                );
-
-                sent = true;
-
-                break;
-
-            } catch (sendErr) {
-
-                console.log(
-                    `SEND ATTEMPT ${attempt} FAILED:`,
-                    sendErr.message || sendErr
-                );
-
-                if (attempt < 3) {
-
-                    await new Promise(r =>
-                        setTimeout(r, 3000)
-                    );
-                }
+        await client.sendMessage(
+            message.from,
+            media,
+            {
+                sendAudioAsVoice: false
             }
-        }
+        );
 
         /* DELETE FILE */
 
         await fs.remove(filePath);
 
-        if (sent) {
-
-            console.log(
-                `SENT TO ${message.from}`
-            );
-
-        } else {
-
-            console.log(
-                `SEND FAILED TO ${message.from}`
-            );
-        }
+        console.log(
+            `SENT TO ${message.from}`
+        );
 
     } catch (err) {
 
         console.log(
             "DOWNLOAD ERROR:",
-            err.message || err
+            err
         );
 
-        try {
-
-            await message.reply(
-                "❌ Download failed — please try again"
-            );
-
-        } catch {}
+        await message.reply(
+            "❌ Download failed"
+        );
     }
 }
 
@@ -498,70 +439,40 @@ console.log(
     "STARTING SHEEZZI BOT..."
 );
 
-/* UPDATE YT-DLP TO LATEST VERSION */
-
-try {
-
-    const { execSync } = await import("child_process");
-
-    console.log("UPDATING YT-DLP...");
-
-    execSync(
-        "/app/node_modules/yt-dlp-exec/bin/yt-dlp -U",
-        { stdio: "inherit" }
-    );
-
-    console.log("YT-DLP UPDATED");
-
-} catch (err) {
-
-    console.log("YT-DLP UPDATE SKIPPED:", err.message);
-}
-
-/* Request pairing code BEFORE initialize so WhatsApp
-   uses phone-link flow instead of QR */
-
-client.pupPage?.once("load", async () => {
-
-    await new Promise(r => setTimeout(r, 2000));
-
-    try {
-
-        await client.requestPairingCode(CONFIG.phoneNumber);
-
-    } catch {}
-});
-
 await client.initialize();
 
-/* Fallback: request after initialize if code event not fired */
-
-await new Promise(r => setTimeout(r, 8000));
+/* ─────────────────────────────────────────────
+   REQUEST PAIRING CODE
+───────────────────────────────────────────── */
 
 try {
 
-    const state = await client.getState().catch(() => null);
+    const state =
+        await client.getState()
+            .catch(() => null);
 
-    if (state !== "CONNECTED") {
+    if (!state) {
 
-        const code = await client.requestPairingCode(
-            CONFIG.phoneNumber
-        );
-
-        console.log(
-            "\nWhatsApp > Linked Devices > Link with phone number\n"
-        );
-
-        console.log("PAIRING CODE:\n");
-
-        console.log(code);
+        const pairingCode =
+            await client.requestPairingCode(
+                CONFIG.phoneNumber
+            );
 
         console.log(
-            "\nWhatsApp > Linked Devices > Link with phone number\n"
+            "\nPAIRING CODE:\n"
+        );
+
+        console.log(pairingCode);
+
+        console.log(
+            "\nUse on WhatsApp Linked Devices\n"
         );
     }
 
 } catch (err) {
 
-    console.log("PAIRING ERROR:", err.message || err);
+    console.log(
+        "PAIRING ERROR:",
+        err
+    );
 }
