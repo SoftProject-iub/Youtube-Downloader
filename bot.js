@@ -15,7 +15,7 @@ const { Client, LocalAuth, MessageMedia } = pkg;
 ───────────────────────────────────────────── */
 
 const CONFIG = {
-    phoneNumber: "923376102787",
+    phoneNumber: "923376201542",
     clientId: "sheezzi-bot",
     sessionPath: "./session",
     tempPath: "./tmp",
@@ -98,6 +98,15 @@ async function removeLocks(dir) {
 await removeLocks(CONFIG.sessionPath);
 
 /* ─────────────────────────────────────────────
+   HELPER: SLEEP
+───────────────────────────────────────────── */
+
+const sleep = ms =>
+    new Promise(resolve =>
+        setTimeout(resolve, ms)
+    );
+
+/* ─────────────────────────────────────────────
    WHATSAPP CLIENT
 ───────────────────────────────────────────── */
 
@@ -131,35 +140,73 @@ const client = new Client({
    EVENTS
 ───────────────────────────────────────────── */
 
+let pairingRequested = false;
+
 client.on("qr", async () => {
 
+    if (pairingRequested) return;
+
+    pairingRequested = true;
+
     console.log(
-        "QR received — requesting pairing code instead..."
+        "QR received — waiting for page to load..."
     );
 
-    try {
+    /* WAIT FOR WHATSAPP PAGE TO FULLY LOAD */
 
-        const pairingCode =
-            await client.requestPairingCode(
-                CONFIG.phoneNumber
+    await sleep(5000);
+
+    let retries = 3;
+
+    while (retries > 0) {
+
+        try {
+
+            console.log(
+                `Requesting pairing code (attempt ${4 - retries}/3)...`
             );
 
-        console.log(
-            "\nPAIRING CODE:\n"
-        );
+            const pairingCode =
+                await client.requestPairingCode(
+                    CONFIG.phoneNumber
+                );
 
-        console.log(pairingCode);
+            console.log(
+                "\nPAIRING CODE:\n"
+            );
 
-        console.log(
-            "\nWhatsApp > Linked Devices > Link with phone number\n"
-        );
+            console.log(pairingCode);
 
-    } catch (err) {
+            console.log(
+                "\nWhatsApp > Linked Devices > Link with phone number\n"
+            );
 
-        console.log(
-            "PAIRING CODE ERROR:",
-            err
-        );
+            break;
+
+        } catch (err) {
+
+            retries--;
+
+            console.log(
+                `PAIRING CODE ERROR (${3 - retries}/3):`,
+                err.message || err
+            );
+
+            if (retries > 0) {
+
+                console.log(
+                    "Retrying in 5 seconds..."
+                );
+
+                await sleep(5000);
+
+            } else {
+
+                console.log(
+                    "All retries failed. Restart the bot."
+                );
+            }
+        }
     }
 });
 
@@ -192,6 +239,8 @@ client.on("auth_failure", msg => {
 client.on("disconnected", reason => {
 
     console.log("DISCONNECTED:", reason);
+
+    pairingRequested = false;
 });
 
 /* ─────────────────────────────────────────────
