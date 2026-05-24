@@ -323,7 +323,7 @@ ${video.title}
         }
 
         await message.reply(
-            "Download completed"
+            "✅ Download completed"
         );
 
         /* SEND MEDIA */
@@ -391,8 +391,7 @@ client.on(
             ) {
 
                 return message.reply(
-`*Youtube Downloader*
-*Developed by sheezzi*
+`🎵 *SHEEZZI BOT*
 
 ━━━━━━━━━━━━━━━
 
@@ -404,11 +403,12 @@ download pasoori video
 
 ━━━━━━━━━━━━━━━
 
- HD QUALITY
- FAST DOWNLOAD
- YOUTUBE SEARCH
- AUDIO + VIDEO`
-
+✅ HD QUALITY
+✅ FAST DOWNLOAD
+✅ YOUTUBE SEARCH
+✅ AUDIO + VIDEO
+✅ PAIRING LOGIN
+✅ RAILWAY READY`
                 );
             }
 
