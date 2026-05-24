@@ -326,26 +326,32 @@ ${video.title}
 
         /* YT-DLP */
 
-        const process = ytDlp.exec(
-            video.url,
-            {
+         const options = {
 
-                output: filePath,
+    output: filePath,
 
-                format:
-                    type === "audio"
-                        ? "bestaudio"
-                        : "bestvideo+bestaudio",
+    format:
+        type === "audio"
+            ? "bestaudio"
+            : "bestvideo+bestaudio",
 
-                extractAudio:
-                    type === "audio",
+    ffmpegLocation:
+        CONFIG.ffmpegPath
+};
 
-                audioFormat: "mp3",
+/* AUDIO ONLY SETTINGS */
 
-                ffmpegLocation:
-                    CONFIG.ffmpegPath
-            }
-        );
+if (type === "audio") {
+
+    options.extractAudio = true;
+
+    options.audioFormat = "mp3";
+}
+
+const process = ytDlp.exec(
+    video.url,
+    options
+);
 
         /* PROGRESS */
 
