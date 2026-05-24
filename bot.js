@@ -204,13 +204,15 @@ ${video.title}
                       format: "bestaudio",
                       extractAudio: true,
                       audioFormat: "mp3",
-                      ffmpegLocation: CONFIG.ffmpegPath
+                      ffmpegLocation: CONFIG.ffmpegPath,
+                      extractor_args: "youtube:player_client=android"
                   }
                 : {
                       output: filePath,
-                      format: "bestvideo+bestaudio",
+                      format: "bestvideo+bestaudio/best",
                       mergeOutputFormat: "mp4",
-                      ffmpegLocation: CONFIG.ffmpegPath
+                      ffmpegLocation: CONFIG.ffmpegPath,
+                      extractor_args: "youtube:player_client=android"
                   };
 
         const process = ytDlp.exec(video.url, ytDlpOptions);
