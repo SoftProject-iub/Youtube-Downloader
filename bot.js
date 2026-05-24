@@ -323,7 +323,7 @@ ${video.title}
         }
 
         await message.reply(
-            "✅ Download completed"
+            "Download completed"
         );
 
         /* SEND MEDIA */
@@ -407,7 +407,7 @@ download pasoori video
  HD QUALITY
  FAST DOWNLOAD
  YOUTUBE SEARCH
- AUDIO + VIDEO
+ AUDIO + VIDEO`
 
                 );
             }
