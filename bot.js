@@ -15,7 +15,7 @@ const { Client, LocalAuth, MessageMedia } = pkg;
 ───────────────────────────────────────────── */
 
 const CONFIG = {
-    phoneNumber: "923376102787",
+    phoneNumber: "923376201542",
     clientId: "sheezzi-bot",
     sessionPath: "./session",
     tempPath: "./tmp",
