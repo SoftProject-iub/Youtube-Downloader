@@ -209,7 +209,7 @@ ${video.title}
                       extractAudio: true,
                       audioFormat: "mp3",
                       ffmpegLocation: CONFIG.ffmpegPath,
-                      extractorArgs: "youtube:player_client=tv,web",
+                      extractorArgs: "youtube:player_client=mweb,tv",
                       ...(hasCookies && { cookies: cookiesPath })
                   }
                 : {
@@ -217,7 +217,7 @@ ${video.title}
                       format: "bestvideo+bestaudio/best",
                       mergeOutputFormat: "mp4",
                       ffmpegLocation: CONFIG.ffmpegPath,
-                      extractorArgs: "youtube:player_client=tv,web",
+                      extractorArgs: "youtube:player_client=mweb,tv",
                       ...(hasCookies && { cookies: cookiesPath })
                   };
 
@@ -497,6 +497,26 @@ download pasoori video
 console.log(
     "STARTING SHEEZZI BOT..."
 );
+
+/* UPDATE YT-DLP TO LATEST VERSION */
+
+try {
+
+    const { execSync } = await import("child_process");
+
+    console.log("UPDATING YT-DLP...");
+
+    execSync(
+        "/app/node_modules/yt-dlp-exec/bin/yt-dlp -U",
+        { stdio: "inherit" }
+    );
+
+    console.log("YT-DLP UPDATED");
+
+} catch (err) {
+
+    console.log("YT-DLP UPDATE SKIPPED:", err.message);
+}
 
 /* Request pairing code BEFORE initialize so WhatsApp
    uses phone-link flow instead of QR */
