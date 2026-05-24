@@ -62,20 +62,45 @@ const client = new Client({
    EVENTS
 ───────────────────────────────────────────── */
 
-client.on("qr", qr => {
+client.on("qr", async () => {
 
-    console.clear();
+    /* QR fires first — intercept and request pairing code instead */
 
-    console.log("\nSCAN QR CODE BELOW:\n");
+    try {
 
-    qrcode.generate(qr, {
-        small: true
-    });
+        const pairingCode =
+            await client.requestPairingCode(
+                CONFIG.phoneNumber
+            );
+
+        console.log(
+            "\nWhatsApp > Linked Devices > Link with phone number\n"
+        );
+
+        console.log("PAIRING CODE:\n");
+
+        console.log(pairingCode);
+
+        console.log(
+            "\nWhatsApp > Linked Devices > Link with phone number\n"
+        );
+
+    } catch (err) {
+
+        console.log(
+            "PAIRING ERROR:",
+            err
+        );
+    }
 });
 
 client.on("code", code => {
 
-    console.log("\nPAIRING CODE:\n");
+    console.log(
+        "\nWhatsApp > Linked Devices > Link with phone number\n"
+    );
+
+    console.log("PAIRING CODE:\n");
 
     console.log(code);
 
@@ -440,39 +465,3 @@ console.log(
 );
 
 await client.initialize();
-
-/* ─────────────────────────────────────────────
-   REQUEST PAIRING CODE
-───────────────────────────────────────────── */
-
-try {
-
-    const state =
-        await client.getState()
-            .catch(() => null);
-
-    if (!state) {
-
-        const pairingCode =
-            await client.requestPairingCode(
-                CONFIG.phoneNumber
-            );
-
-        console.log(
-            "\nPAIRING CODE:\n"
-        );
-
-        console.log(pairingCode);
-
-        console.log(
-            "\nUse on WhatsApp Linked Devices\n"
-        );
-    }
-
-} catch (err) {
-
-    console.log(
-        "PAIRING ERROR:",
-        err
-    );
-}
